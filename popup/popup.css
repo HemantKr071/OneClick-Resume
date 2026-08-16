@@ -1,0 +1,73 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    width: 320px;
+}
+
+.container {
+    padding: 20px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 20px;
+}
+
+.subtitle {
+    color: #666;
+    font-size: 13px;
+}
+
+.resume-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+
+    margin-bottom: 12px;
+}
+
+#resume-name {
+    font-weight: 600;
+    font-size: 13px;
+}
+
+#resume-size {
+    font-size: 11px;
+    color: #777;
+    margin-top: 4px;
+}
+
+.upload-button {
+    display: block;
+
+    padding: 10px;
+    text-align: center;
+
+    background: #111;
+    color: white;
+
+    border-radius: 6px;
+
+    cursor: pointer;
+}
+
+button {
+    border: none;
+    background: #eee;
+    padding: 6px 8px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.hidden {
+    display: none;
+}
+
+#status {
+    margin-top: 10px;
+    font-size: 12px;
+}
