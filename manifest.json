@@ -3,14 +3,29 @@
 
   "name": "One-Click Resume",
 
-  "version": "0.1.0",
+  "version": "0.2.0",
 
-  "description": "Upload your saved resume to job applications with one click.",
+  "description": "Save multiple resumes and upload the default one to any job application with one click.",
 
-  "permissions": [],
+  "permissions": [
+    "storage"
+  ],
+
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
 
   "action": {
-    "default_popup": "popup/popup.html"
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
   },
 
   "background": {

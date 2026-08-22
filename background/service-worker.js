@@ -1,260 +1,140 @@
-const DB_NAME = "resume-one-click";
-const DB_VERSION = 1;
-const STORE_NAME = "resumes";
+/*
+=====================================================
+One-Click Resume — Background Service Worker (V2)
 
+The service worker is the ONLY component that exposes
+resume data to content scripts. Websites never see
+anything except the file that gets attached.
 
-console.log(
-    "🔥 Resume One-Click service worker loaded"
-);
+All storage logic lives in storage/resume-db.js which
+is imported below (same copy the popup uses).
+=====================================================
+*/
+
+importScripts("../storage/resume-db.js");
+
+console.log("🔥 Resume One-Click service worker loaded");
 
 
 /*
-    Open IndexedDB.
+-----------------------------------------------------
+Message handlers.
+
+Each handler returns a plain object that becomes the
+sendResponse payload. Errors are normalized into
+
+    { error: "SOME_CODE_OR_MESSAGE" }
+
+so callers can react consistently.
+-----------------------------------------------------
 */
-function openResumeDB() {
 
-    return new Promise(
-        (resolve, reject) => {
+const handlers = {
 
-            const request =
-                indexedDB.open(
-                    DB_NAME,
-                    DB_VERSION
-                );
+    /*
+        Metadata for ALL saved resumes + default id.
+        No base64 payloads are sent here on purpose:
+        listing must stay cheap.
+    */
+    async GET_RESUMES() {
+        return getResumes();
+    },
 
+    /*
+        Full record of the default resume.
+        Used by the widget's main button and by the
+        legacy content-script flow.
+    */
+    async GET_DEFAULT_RESUME() {
+        return { resume: await getDefaultResume() };
+    },
 
-            request.onupgradeneeded = () => {
-
-                const db =
-                    request.result;
-
-
-                if (
-                    !db.objectStoreNames.contains(
-                        STORE_NAME
-                    )
-                ) {
-
-                    db.createObjectStore(
-                        STORE_NAME
-                    );
-                }
-            };
-
-
-            request.onsuccess = () => {
-
-                resolve(
-                    request.result
-                );
-            };
-
-
-            request.onerror = () => {
-
-                reject(
-                    request.error
-                );
-            };
+    /*
+        Full record of ONE resume by id.
+        The content script requests only the resume it
+        needs (temporary dropdown selection).
+    */
+    async GET_RESUME_BY_ID(message) {
+        if (!message.id) {
+            return { error: "MISSING_RESUME_ID" };
         }
-    );
-}
+        return { resume: await getResumeById(message.id) };
+    },
 
-
-/*
-    Get saved resume.
-*/
-async function getResume() {
-
-    const db =
-        await openResumeDB();
-
-
-    return new Promise(
-        (resolve, reject) => {
-
-            const transaction =
-                db.transaction(
-                    STORE_NAME,
-                    "readonly"
-                );
-
-
-            const store =
-                transaction.objectStore(
-                    STORE_NAME
-                );
-
-
-            const request =
-                store.get(
-                    "default"
-                );
-
-
-            request.onsuccess = () => {
-
-                resolve(
-                    request.result || null
-                );
-            };
-
-
-            request.onerror = () => {
-
-                reject(
-                    request.error
-                );
-            };
+    /*
+        Save a new resume. The worker generates the id,
+        never trusting caller-supplied ids.
+    */
+    async SAVE_RESUME(message) {
+        const r = message.resume;
+        if (!r || !r.data) {
+            return { error: "INVALID_RESUME" };
         }
-    );
-}
+        const saved = await saveResumeRecord(r);
+        return {
+            resume: metaFromRecord(saved),
+            defaultResumeId: await getDefaultResumeId()
+        };
+    },
 
-
-/*
-    Convert File/Blob → Base64.
-*/
-function blobToBase64(blob) {
-
-    return new Promise(
-        (resolve, reject) => {
-
-            const reader =
-                new FileReader();
-
-
-            reader.onload = () => {
-
-                const result =
-                    reader.result;
-
-
-                /*
-                    Example:
-
-                    data:application/pdf;base64,
-                    JVBERi0xLjQK...
-                */
-
-                const base64 =
-                    result.split(",")[1];
-
-
-                resolve(
-                    base64
-                );
-            };
-
-
-            reader.onerror = () => {
-
-                reject(
-                    reader.error
-                );
-            };
-
-
-            reader.readAsDataURL(
-                blob
-            );
+    async DELETE_RESUME(message) {
+        if (!message.id) {
+            return { error: "MISSING_RESUME_ID" };
         }
-    );
-}
+        return deleteResumeRecord(message.id);
+    },
 
-
-/*
-    Listen for messages
-    from content scripts.
-*/
-chrome.runtime.onMessage.addListener(
-    (
-        message,
-        sender,
-        sendResponse
-    ) => {
-
-        console.log(
-            "📩 Message:",
-            message
-        );
-
-
-        if (
-            message.type !==
-            "GET_RESUME"
-        ) {
-
-            return;
+    async SET_DEFAULT_RESUME(message) {
+        if (!message.id) {
+            return { error: "MISSING_RESUME_ID" };
         }
+        return setDefaultResumeId(message.id);
+    },
 
+    /*
+    -------------------------------------------------
+        LEGACY (V1) MESSAGE — kept temporarily so any
+        old callers keep working. Maps onto the new
+        "get default resume" flow and preserves the
+        original response shape:
 
-        getResume()
+            { resume: { name, type, size,
+                        lastModified, data } }
 
-            .then(
-                async (resume) => {
-
-                    if (!resume) {
-
-                        sendResponse({
-                            resume: null
-                        });
-
-                        return;
-                    }
-
-
-                    const base64 =
-                        await blobToBase64(
-                            resume
-                        );
-
-
-                    sendResponse({
-
-                        resume: {
-
-                            name:
-                                resume.name,
-
-                            type:
-                                resume.type,
-
-                            size:
-                                resume.size,
-
-                            lastModified:
-                                resume.lastModified,
-
-                            data:
-                                base64
-                        }
-
-                    });
-
-                }
-            )
-
-            .catch(
-                (error) => {
-
-                    console.error(
-                        "❌ Failed to get resume:",
-                        error
-                    );
-
-
-                    sendResponse({
-                        resume: null
-                    });
-                }
-            );
-
-
-        /*
-            Required because
-            response is asynchronous.
-        */
-
-        return true;
+            { resume: null }   when nothing is stored
+    -------------------------------------------------
+    */
+    async GET_RESUME() {
+        const resume = await getDefaultResume();
+        return { resume };
     }
-);
+};
+
+
+/*
+-----------------------------------------------------
+Single message listener routes every request through
+the handler table. Returning true keeps the message
+channel open for the asynchronous sendResponse call.
+-----------------------------------------------------
+*/
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+    console.log("📩 Message:", message?.type);
+
+    const handler = handlers[message?.type];
+
+    if (!handler) {
+        sendResponse({ error: "UNKNOWN_MESSAGE_TYPE" });
+        return false;
+    }
+
+    handler(message)
+        .then((response) => sendResponse(response))
+        .catch((error) => {
+            console.error(`❌ ${message.type} failed:`, error);
+            sendResponse({ error: error?.message || String(error) });
+        });
+
+    return true; // asynchronous response
+});

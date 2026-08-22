@@ -1,17 +1,15 @@
-.resume-one-click-button {
-    margin-left: 8px;
+/*
+=====================================================
+content.css — intentionally minimal.
 
-    padding: 6px 10px;
+The V2 widget is rendered inside a Shadow DOM attached
+to #resume-one-click-root (see content/content.js).
+Shadow DOM fully isolates the widget from website CSS,
+so its styles are embedded as WIDGET_CSS inside
+content.js and injected into the shadow root. Website
+stylesheets can neither break nor target it.
 
-    border: none;
-    border-radius: 6px;
-
-    background: #111;
-    color: white;
-
-    font-size: 12px;
-
-    cursor: pointer;
-
-    z-index: 999999;
-}
+This file is kept for structural compatibility; page-
+level styling is not needed for the widget.
+=====================================================
+*/

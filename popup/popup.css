@@ -1,73 +1,165 @@
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
+    padding: 16px;
+
     width: 320px;
+    box-sizing: border-box;
+
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    color: #111827;
 }
 
-.container {
-    padding: 20px;
-}
-
-h1 {
-    margin: 0;
-    font-size: 20px;
-}
-
-.subtitle {
-    color: #666;
-    font-size: 13px;
-}
-
-.resume-card {
+.header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: 8px;
 
-    padding: 12px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
+    margin-top: 0;
+    margin-bottom: 6px;
+}
+
+.logo {
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+}
+
+h2 {
+    margin: 0;
+}
+
+.description {
+    color: #6b7280;
+    font-size: 12px;
+    margin-bottom: 14px;
+}
+
+
+/*
+-----------------------------------------------------
+Resume list
+-----------------------------------------------------
+*/
+
+.resume-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    max-height: 300px;
+    overflow-y: auto;
 
     margin-bottom: 12px;
 }
 
-#resume-name {
+.empty-state {
+    padding: 14px;
+    text-align: center;
+    font-size: 12px;
+    color: #9ca3af;
+    border: 1px dashed #d1d5db;
+    border-radius: 8px;
+}
+
+.resume-row {
+    padding: 10px 12px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+.resume-row.is-default {
+    border-color: #f59e0b;
+    background: #fffbeb;
+}
+
+.row-main {
+    margin-bottom: 8px;
+}
+
+.row-name {
     font-weight: 600;
     font-size: 13px;
+    word-break: break-word;
 }
 
-#resume-size {
+.is-default .row-name {
+    color: #92400e;
+}
+
+.row-meta {
+    margin-top: 3px;
     font-size: 11px;
-    color: #777;
-    margin-top: 4px;
+    color: #6b7280;
 }
 
-.upload-button {
-    display: block;
+.row-actions {
+    display: flex;
+    gap: 6px;
+}
 
-    padding: 10px;
-    text-align: center;
+.action-button {
+    flex: 1;
 
-    background: #111;
-    color: white;
+    padding: 6px 8px;
 
+    border: none;
     border-radius: 6px;
 
+    background: #f3f4f6;
+    color: #111827;
+
+    font-size: 12px;
     cursor: pointer;
 }
 
-button {
+.action-button:hover {
+    background: #e5e7eb;
+}
+
+.action-button.default-active {
+    background: #fef3c7;
+    color: #92400e;
+    cursor: default;
+}
+
+.action-button.delete {
+    color: #b91c1c;
+}
+
+.action-button.delete:hover {
+    background: #fee2e2;
+}
+
+
+/*
+-----------------------------------------------------
+Add resume
+-----------------------------------------------------
+*/
+
+.add-button {
+    width: 100%;
+    padding: 10px;
+
     border: none;
-    background: #eee;
-    padding: 6px 8px;
-    border-radius: 5px;
+    border-radius: 6px;
+
+    background: #111827;
+    color: white;
+
+    font-weight: 600;
+    font-size: 13px;
     cursor: pointer;
 }
 
-.hidden {
-    display: none;
+.add-button:hover {
+    opacity: 0.9;
 }
 
-#status {
+
+.status {
     margin-top: 10px;
+    min-height: 16px;
     font-size: 12px;
 }
