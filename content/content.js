@@ -1046,7 +1046,6 @@ function createResumeWidget() {
     mainButton = document.createElement("button");
     mainButton.type = "button";
     mainButton.className = "main-btn";
-    mainButton.setAttribute("data-no-drag", "");
     mainButton.textContent = "⚡ Use Saved Resume";
     mainButton.addEventListener("click", () => handleMainButtonUpload());
 
@@ -1359,10 +1358,13 @@ function closeWidget() {
 ==========================================================
 DRAGGING (Pointer Events)
 
-- Only the widget surface acts as drag handle.
-  Buttons and the dropdown are marked data-no-drag.
+- The whole widget surface acts as drag handle, including
+  the main button. Only the icon buttons and the dropdown
+  are marked data-no-drag.
 - Movement below DRAG_THRESHOLD_PX counts as a click,
   anything above starts a drag.
+- Pointer capture is applied lazily (after the threshold)
+  so plain clicks still reach their original target.
 - After a real drag, the imminent click event is
   suppressed so releasing the pointer never triggers
   an upload/toggle/close.
@@ -1404,12 +1406,6 @@ function makeWidgetDraggable(handle) {
             startTop: rect.top,
             moved: false
         };
-
-        try {
-            handle.setPointerCapture(event.pointerId);
-        } catch {
-            /* capture unsupported — dragging still works */
-        }
     });
 
     handle.addEventListener("pointermove", (event) => {
@@ -1421,6 +1417,19 @@ function makeWidgetDraggable(handle) {
         if (!dragState.moved) {
             if (Math.hypot(dx, dy) < DRAG_THRESHOLD_PX) return;
             dragState.moved = true;
+
+            /*
+                Capture only once a real drag starts. Capturing on
+                pointerdown would retarget the click event away from
+                the button and break simple clicks.
+            */
+
+            try {
+                handle.setPointerCapture(event.pointerId);
+            } catch {
+                /* capture unsupported — dragging still works */
+            }
+
             handle.classList.add("dragging");
         }
 
